@@ -1,6 +1,5 @@
 ﻿using System.Text.RegularExpressions;
-using DeepL;
-using DeepL.Model;
+using GTranslatorAPI;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -22,7 +21,7 @@ internal partial class Analyzer
 
         string[] csFiles = Directory.GetFiles(folderPath, "*.cs", SearchOption.AllDirectories);
 
-        Translator client = new (apiKey);
+        GTranslatorAPIClient client = new ();
 
         foreach (string file in csFiles)
         {
@@ -74,7 +73,7 @@ internal partial class Analyzer
 
                     string translation = MatchFunc(comment, options) ? CapitalizeFirstLetter(await TranslateTextAsync(content, client, options.Language)) : content;
 
-                    string result = $"{match.Groups["space"]}//{translation}";
+                    string result = $"{match.Groups["space"]}//{match.Groups["between"]}{translation}";
 
                     code = code.Replace(comment, result);
                 }
@@ -111,11 +110,11 @@ internal partial class Analyzer
         Console.WriteLine("Translation completed.");
     }
 
-    private static async Task<string> TranslateTextAsync(string text, Translator client, string language)
+    private static async Task<string> TranslateTextAsync(string text, GTranslatorAPIClient client, string language)
     {
-        TextResult response = await client.TranslateTextAsync(text, null, language);
+        Translation response = await client.TranslateAsync(Languages.zh_CN, Languages.en, text);
 
-        return response.Text;
+        return response.TranslatedText;
     }
 
     private static bool MatchFunc(string text, Options options) => string.IsNullOrWhiteSpace(options.RegexPattern) || Regex.IsMatch(text, options.RegexPattern);
@@ -147,7 +146,7 @@ internal partial class Analyzer
     [GeneratedRegex(@"^(?<space>\s*\*?\s*)(?<content>.*?)\s*?$")]
     private static partial Regex MultiLineCommentLine();
 
-    [GeneratedRegex(@"^(?<space>\s*)//(?<content>.*?)\s*$", RegexOptions.Multiline)]
+    [GeneratedRegex(@"^(?<space>\s*)(?<between>//\s*)(?<content>.*?)\s*$", RegexOptions.Multiline)]
     private static partial Regex SingleLineComment();
 
     [GeneratedRegex(@"^(?<space>\s*)///(?<between>\s*)(?<content>.*?)(?<end>\s*\n)", RegexOptions.Multiline)]
