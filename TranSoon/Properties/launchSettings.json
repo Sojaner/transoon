@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "TranSoon": {
+      "commandName": "Project",
+      "commandLineArgs": "-k \"9ab402e9-144d-43aa-b8c3-01cb2377b0fd:fx\" -d \"C:\\Users\\sojan\\Documents\\Git\\GitHub\\DotnetSpider\\src\\DotnetSpider\""
+    }
+  }
+}
