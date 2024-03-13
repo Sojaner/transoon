@@ -1,18 +1,16 @@
 ﻿using System.Text.RegularExpressions;
-using GTranslatorAPI;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace TranSoon;
 
-internal partial class Analyzer
+internal partial class Analyzer(Regex translatable, ITranslator translator, bool capitalizeFirstLetter)
 {
-    public static async Task TranslateComments(Options options)
-    {
-        string folderPath = options.DirectoryPath;
-        string apiKey = options.ApiKey;
+    private readonly Func<string, bool> _shouldTranslate = translatable.IsMatch;
 
+    public async Task TranslateComments(string folderPath)
+    {
         if (!Directory.Exists(folderPath))
         {
             Console.WriteLine($"Folder {folderPath} does not exist.");
@@ -20,8 +18,6 @@ internal partial class Analyzer
         }
 
         string[] csFiles = Directory.GetFiles(folderPath, "*.cs", SearchOption.AllDirectories);
-
-        GTranslatorAPIClient client = new ();
 
         foreach (string file in csFiles)
         {
@@ -40,7 +36,7 @@ internal partial class Analyzer
                 continue;
             }
 
-            foreach (SyntaxTrivia node in nodes.Where(node => MatchFunc(node.ToFullString(), options)))
+            foreach (SyntaxTrivia node in nodes.Where(node => _shouldTranslate(node.ToFullString())))
             {
                 if (node.IsKind(SyntaxKind.SingleLineDocumentationCommentTrivia))
                 {
@@ -54,7 +50,7 @@ internal partial class Analyzer
                     {
                         string text = match.Groups["content"].Value;
 
-                        string translation = MatchFunc(text, options) ? CapitalizeFirstLetter(await TranslateTextAsync(text, client, options.Language)) : text;
+                        string translation = _shouldTranslate(text) ? CapitalizeFirstLetter(await translator.TranslateAsync(text), capitalizeFirstLetter) : text;
 
                         outputs.Add($"{match.Groups["space"]}///{match.Groups["between"]}{translation}{match.Groups["end"]}");
                     }
@@ -71,9 +67,9 @@ internal partial class Analyzer
 
                     string content = match.Groups["content"].Value;
 
-                    string translation = MatchFunc(comment, options) ? CapitalizeFirstLetter(await TranslateTextAsync(content, client, options.Language)) : content;
+                    string translation = _shouldTranslate(comment) ? CapitalizeFirstLetter(await translator.TranslateAsync(content), capitalizeFirstLetter) : content;
 
-                    string result = $"{match.Groups["space"]}//{match.Groups["between"]}{translation}";
+                    string result = $"{match.Groups["space"]}{match.Groups["between"]}{translation}";
 
                     code = code.Replace(comment, result);
                 }
@@ -91,7 +87,7 @@ internal partial class Analyzer
                     {
                         string text = match.Groups["content"].Value;
 
-                        string translation = MatchFunc(text, options) ? CapitalizeFirstLetter(await TranslateTextAsync(text, client, options.Language)) : text;
+                        string translation = _shouldTranslate(text) ? CapitalizeFirstLetter(await translator.TranslateAsync(text), capitalizeFirstLetter) : text;
 
                         outputs.Add($"{match.Groups["space"]}{translation}");
                     }
@@ -110,20 +106,10 @@ internal partial class Analyzer
         Console.WriteLine("Translation completed.");
     }
 
-    private static async Task<string> TranslateTextAsync(string text, GTranslatorAPIClient client, string language)
+    private static string CapitalizeFirstLetter(string input, bool capitalize)
     {
-        Translation response = await client.TranslateAsync(Languages.zh_CN, Languages.en, text);
+        if (!capitalize || string.IsNullOrEmpty(input)) return input;
 
-        return response.TranslatedText;
-    }
-
-    private static bool MatchFunc(string text, Options options) => string.IsNullOrWhiteSpace(options.RegexPattern) || Regex.IsMatch(text, options.RegexPattern);
-
-    private static string CapitalizeFirstLetter(string input)
-    {
-        if (string.IsNullOrEmpty(input)) return input;
-
-        // Check if the first character is a Latin letter and not already capitalized
         if (char.IsLetter(input[0]) && !char.IsUpper(input[0]) && IsLatinLetter(input[0]) && input.Length >= 1)
         {
             return char.ToUpper(input[0]) + input[1..];
@@ -136,7 +122,6 @@ internal partial class Analyzer
 
     private static bool IsLatinLetter(char c)
     {
-        // Latin alphabet ranges in Unicode
         return c is >= 'A' and <= 'Z' or >= 'a' and <= 'z';
     }
 
