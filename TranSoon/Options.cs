@@ -27,4 +27,10 @@ internal class Options
 
     [Option('c', "capitalize", Required = false, HelpText = "Capitalize first letter of translated comments. (Default is true)")]
     public bool CapitalizeFirstLetter { get; set; } = true;
+
+    [Option('y', "yes", Required = false, HelpText = "Acknowledge and disable the \"Google's free Translation API\" usage warning by implicitly answering \"yes\". (Default is false)")]
+    public bool Acknowledged { get; set;} = false;
+
+    [Option('s', "symbols", Required = false, HelpText = "Preprocessor symbols to use with the C# parser for translating conditional code parts. (Default is no symbols)")]
+    public IEnumerable<string> PreprocessorSymbols { get; set; } = [];
 }

@@ -1,13 +1,15 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.FileSystemGlobbing;
 using ShellProgressBar;
 
 namespace TranSoon;
 
-internal partial class Analyzer(Regex translatable, ITranslator translator, bool capitalizeFirstLetter)
+internal partial class Analyzer(Regex translatable, ITranslator translator, bool capitalizeFirstLetter, IEnumerable<string> preprocessorSymbols)
 {
     private readonly Func<string, bool> _shouldTranslate = translatable.IsMatch;
 
@@ -54,101 +56,16 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, bool
 
             ChildProgressBar childProgressBar = progressBar.Spawn(1, filePath, childOptions);
 
-            string code = await File.ReadAllTextAsync(file);
-            SyntaxTree tree = CSharpSyntaxTree.ParseText(code);
-            CompilationUnitSyntax root = tree.GetCompilationUnitRoot();
-
-            List<SyntaxTrivia> nodes = root.DescendantTrivia()
-                .Where(trivia => trivia.IsKind(SyntaxKind.SingleLineCommentTrivia) ||
-                                 trivia.IsKind(SyntaxKind.MultiLineCommentTrivia) ||
-                                 trivia.IsKind(SyntaxKind.SingleLineDocumentationCommentTrivia)).ToList();
-
-            if (nodes.Count == 0)
-            {
-                childProgressBar.Tick();
-
-                progressBar.Tick();
-
-                continue;
-            }
-
             try
             {
-                foreach (SyntaxTrivia node in nodes.Where(node => _shouldTranslate(node.ToFullString())))
+                string source = await File.ReadAllTextAsync(file);
+
+                string code = await Translate(source);
+
+                if (code != source)
                 {
-                    if (node.IsKind(SyntaxKind.SingleLineDocumentationCommentTrivia))
-                    {
-                        string documentation = node.ToFullString();
-
-                        MatchCollection matches = DocumentationCommentLine().Matches(documentation);
-
-                        List<string> outputs = [];
-
-                        foreach (Match match in matches.Cast<Match>())
-                        {
-                            string text = match.Groups["content"].Value;
-
-                            string translation = _shouldTranslate(text)
-
-                                ? CapitalizeFirstLetter(await translator.TranslateAsync(text), capitalizeFirstLetter)
-
-                                : text;
-
-                            outputs.Add( $"{match.Groups["space"]}///{match.Groups["between"]}{translation}{match.Groups["end"]}");
-                        }
-
-                        string result = string.Join("", outputs);
-
-                        code = code.Replace(documentation, result);
-                    }
-                    else if (node.IsKind(SyntaxKind.SingleLineCommentTrivia))
-                    {
-                        string comment = node.ToFullString();
-
-                        Match match = SingleLineComment().Match(comment);
-
-                        string content = match.Groups["content"].Value;
-
-                        string translation = _shouldTranslate(comment)
-
-                            ? CapitalizeFirstLetter(await translator.TranslateAsync(content), capitalizeFirstLetter)
-
-                            : content;
-
-                        string result = $"{match.Groups["space"]}{match.Groups["between"]}{translation}";
-
-                        code = code.Replace(comment, result);
-                    }
-                    else if (node.IsKind(SyntaxKind.MultiLineCommentTrivia))
-                    {
-                        string comment = node.ToFullString();
-
-                        Match whole = WholeMultiLineComment().Match(comment);
-
-                        MatchCollection matches = MultiLineCommentLine().Matches(whole.Groups["content"].Value);
-
-                        List<string> outputs = [];
-
-                        foreach (Match match in matches.Cast<Match>())
-                        {
-                            string text = match.Groups["content"].Value;
-
-                            string translation = _shouldTranslate(text)
-
-                                ? CapitalizeFirstLetter(await translator.TranslateAsync(text), capitalizeFirstLetter)
-
-                                : text;
-
-                            outputs.Add($"{match.Groups["space"]}{translation}");
-                        }
-
-                        string result = $"{whole.Groups["start"]}/*{string.Join("", outputs)}{whole.Groups["end"]}*/";
-
-                        code = code.Replace(comment, result);
-                    }
+                    await File.WriteAllTextAsync(file, code);
                 }
-
-                await File.WriteAllTextAsync(file, code);
 
                 childProgressBar.Tick();
 
@@ -164,6 +81,166 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, bool
 
                 progressBar.Tick();
             }
+        }
+    }
+
+    private async Task<string> Translate(string codeText)
+    {
+        StringBuilder code = new(codeText);
+
+        SyntaxTree tree = CSharpSyntaxTree.ParseText(code.ToString(), new CSharpParseOptions(preprocessorSymbols: preprocessorSymbols));
+
+        CompilationUnitSyntax root = tree.GetCompilationUnitRoot();
+
+        List<SyntaxNode> nodes = (await tree.GetRootAsync()).DescendantNodes()
+
+            .Where(node => node is InterpolatedStringExpressionSyntax or LiteralExpressionSyntax
+            {
+                Token.RawKind: (int)SyntaxKind.StringLiteralToken or (int)SyntaxKind.SingleLineRawStringLiteralToken or (int)SyntaxKind.MultiLineRawStringLiteralToken
+
+            }).ToList();
+
+        List<SyntaxTrivia> trivia = root.DescendantTrivia()
+
+            .Where(trivia => trivia.IsKind(SyntaxKind.SingleLineCommentTrivia) ||
+
+                             trivia.IsKind(SyntaxKind.MultiLineCommentTrivia) ||
+
+                             trivia.IsKind(SyntaxKind.SingleLineDocumentationCommentTrivia)).ToList();
+
+        if (trivia.Count == 0 && nodes.Count == 0)
+        {
+            return codeText;
+        }
+
+        foreach (SyntaxTrivia syntaxTrivia in trivia.Where(node => _shouldTranslate(node.ToFullString())))
+        {
+            if (syntaxTrivia.IsKind(SyntaxKind.SingleLineDocumentationCommentTrivia))
+            {
+                string documentation = syntaxTrivia.ToFullString();
+
+                MatchCollection matches = DocumentationCommentLine().Matches(documentation);
+
+                List<string> outputs = [];
+
+                foreach (Match match in matches.Cast<Match>())
+                {
+                    string text = match.Groups["content"].Value;
+
+                    string translation = _shouldTranslate(text)
+
+                        ? CapitalizeFirstLetter(await translator.TranslateAsync(text), capitalizeFirstLetter)
+
+                        : text;
+
+                    outputs.Add($"{match.Groups["space"]}///{match.Groups["between"]}{translation}{match.Groups["end"]}");
+                }
+
+                string result = string.Join("", outputs);
+
+                if (ReplaceCode(code, syntaxTrivia.FullSpan, documentation, result))
+                {
+                    return await Translate(code.ToString());
+                }
+            }
+            else if (syntaxTrivia.IsKind(SyntaxKind.SingleLineCommentTrivia))
+            {
+                string comment = syntaxTrivia.ToFullString();
+
+                Match match = SingleLineComment().Match(comment);
+
+                string content = match.Groups["content"].Value;
+
+                string translation = _shouldTranslate(comment)
+
+                    ? CapitalizeFirstLetter(await translator.TranslateAsync(content), capitalizeFirstLetter)
+
+                    : content;
+
+                string result = $"{match.Groups["space"]}{match.Groups["between"]}{translation}";
+
+                if (ReplaceCode(code, syntaxTrivia.FullSpan, comment, result))
+                {
+                    return await Translate(code.ToString());
+                }
+            }
+            else if (syntaxTrivia.IsKind(SyntaxKind.MultiLineCommentTrivia))
+            {
+                string comment = syntaxTrivia.ToFullString();
+
+                Match whole = WholeMultiLineComment().Match(comment);
+
+                MatchCollection matches = MultiLineCommentLine().Matches(whole.Groups["content"].Value);
+
+                List<string> outputs = [];
+
+                foreach (Match match in matches.Cast<Match>())
+                {
+                    string text = match.Groups["content"].Value;
+
+                    string translation = _shouldTranslate(text)
+
+                        ? CapitalizeFirstLetter(await translator.TranslateAsync(text), capitalizeFirstLetter)
+
+                        : text;
+
+                    outputs.Add($"{match.Groups["space"]}{translation}");
+                }
+
+                string result = $"{whole.Groups["start"]}/*{string.Join("", outputs)}{whole.Groups["end"]}*/";
+
+                if (ReplaceCode(code, syntaxTrivia.FullSpan, comment, result))
+                {
+                    return await Translate(code.ToString());
+                }
+            }
+        }
+
+        foreach (SyntaxNode syntaxNode in nodes)
+        {
+            string text = syntaxNode.ToFullString();
+
+            Match whole = StringToken().Match(text);
+
+            MatchCollection matches = StringLine().Matches(whole.Groups["content"].Value);
+
+            List<string> outputs = [];
+
+            foreach (Match match in matches.Cast<Match>())
+            {
+                string content = match.Groups["content"].Value;
+
+                string translation = _shouldTranslate(content)
+
+                    ? CapitalizeFirstLetter(await translator.TranslateAsync(content), capitalizeFirstLetter)
+
+                    : content;
+
+                outputs.Add($"{match.Groups["start"]}{translation}{match.Groups["end"]}");
+            }
+
+            string result = $"{whole.Groups["start"]}{string.Join("", outputs)}{whole.Groups["end"]}";
+
+            if (ReplaceCode(code, syntaxNode.FullSpan, text, result))
+            {
+                return await Translate(code.ToString());
+            }
+        }
+
+        return code.ToString();
+
+        static bool ReplaceCode(StringBuilder stringBuilder, TextSpan textSpan, string source, string result)
+        {
+            if (source == result)
+            {
+                return false;
+            }
+
+            stringBuilder.Remove(textSpan.Start, textSpan.Length)
+
+                .Insert(textSpan.Start, result);
+
+            return true;
         }
     }
 
@@ -197,4 +274,10 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, bool
 
     [GeneratedRegex(@"^(?<space>\s*)///(?<between>\s*)(?<content>.*?)(?<end>\s*\n)", RegexOptions.Multiline)]
     private static partial Regex DocumentationCommentLine();
+
+    [GeneratedRegex("""^(?<start>\s*[@$]*"+\s*)(?<content>.*?)(?<end>\s*"+\s*)$""", RegexOptions.Singleline)]
+    private static partial Regex StringToken();
+
+    [GeneratedRegex(@"^(?<start>\s*)(?<content>.*)(?<end>\n?)", RegexOptions.Multiline)]
+    private static partial Regex StringLine();
 }

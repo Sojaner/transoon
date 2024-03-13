@@ -5,15 +5,15 @@ using Microsoft.Extensions.FileSystemGlobbing;
 using TranSoon;
 using TranSoon.Translators;
 
+ConsoleColor consoleColor = Console.ForegroundColor;
+
 await Parser.Default.ParseArguments<Options>(args).WithParsedAsync(options =>
 {
-    if (options.Translator.Equals("google", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(options.ApiKey))
+    if (options.Translator.Equals("google", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(options.ApiKey) && !options.Acknowledged)
     {
         Console.ForegroundColor = ConsoleColor.DarkYellow;
 
-        Console.WriteLine("Using Google Translate without and API Key will switch to Google's free API that is provided only for demo purposes and should not be used in commercial and production environments.");
-
-        Console.WriteLine("Please use with caution and at your own risk!");
+        Console.WriteLine("NOTE: Using Google Translate without and API Key will switch to Google's free Translation API that is provided only for demo purposes and should not be used in commercial and production environments.");
 
         Console.ResetColor();
 
@@ -23,14 +23,18 @@ await Parser.Default.ParseArguments<Options>(args).WithParsedAsync(options =>
 
         string? answer = Console.ReadLine();
 
-        if (!Regex.IsMatch((answer ?? "").Trim(), "^y(?:es)?$"))
+        if (!Utilities.Answer().IsMatch((answer ?? "").Trim()))
         {
+            Console.WriteLine();
+
             Console.WriteLine("Terminating the translation...");
 
             return Task.CompletedTask;
         }
 
         Console.Clear();
+
+        Console.ForegroundColor = consoleColor;
     }
 
     ITranslator translator;
@@ -52,7 +56,7 @@ await Parser.Default.ParseArguments<Options>(args).WithParsedAsync(options =>
 
     Matcher matcher = new ();
 
-    if (options.Includes.Where(include => !string.IsNullOrWhiteSpace(include)).ToList() is {Count: > 0} includes)
+    if (options.Includes.Where(include => !string.IsNullOrWhiteSpace(include)).ToList() is { Count: > 0 } includes)
     {
         matcher.AddIncludePatterns(includes);
     }
@@ -66,5 +70,7 @@ await Parser.Default.ParseArguments<Options>(args).WithParsedAsync(options =>
         matcher.AddExcludePatterns(excludes);
     }
 
-    return new Analyzer(new Regex(options.RegexPattern), translator, options.CapitalizeFirstLetter).TranslateComments(options.DirectoryPath, matcher);
+    return new Analyzer(new Regex(options.RegexPattern), translator, options.CapitalizeFirstLetter, options.PreprocessorSymbols).TranslateComments(options.DirectoryPath, matcher);
 });
+
+Console.ForegroundColor = consoleColor;
