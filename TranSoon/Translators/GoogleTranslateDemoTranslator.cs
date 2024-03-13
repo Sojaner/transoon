@@ -3,7 +3,7 @@ using Newtonsoft.Json.Linq;
 
 namespace TranSoon.Translators
 {
-    internal class GoogleTranslateDemo(CultureInfo targetCultureInfo, CultureInfo? sourceCultureInfo = null): ITranslator
+    internal class GoogleTranslateDemoTranslator(CultureInfo targetCultureInfo, CultureInfo? sourceCultureInfo = null): ITranslator
     {
         private readonly HttpClient _client = new();
 

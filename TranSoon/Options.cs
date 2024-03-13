@@ -4,15 +4,27 @@ namespace TranSoon;
 
 internal class Options
 {
-    [Option('k', "api-key", Required = true, HelpText = "Google Translate API Key")]
+    [Option('d', "directory", Required = false, HelpText = "Directory containing .cs files. (Default is current working directory)")]
+    public string DirectoryPath { get; set; } = ".";
+
+    [Option('k', "api-key", Required = false, HelpText = "Google Translate API Key.")]
     public string ApiKey { get; set; } = null!;
 
-    [Option('d', "directory", Required = true, HelpText = "Directory containing .cs files")]
-    public string DirectoryPath { get; set; } = null!;
+    [Option('t', "translator", Required = false, HelpText = "Translator to use (google, deepl). (Default is google)")]
+    public string Translator { get; set; } = "google";
 
-    [Option('l', "language", Required = false, HelpText = "Language to translate to")]
+    [Option('l', "language", Required = false, HelpText = "Language to translate to. (Default is en-US)")]
     public string Language { get; set; } = "en-US";
 
-    [Option('r', "regex", Required = false, HelpText = "Regex pattern to match comments to be translated")]
+    [Option('r', "regex", Required = false, HelpText = @"Regex pattern to match comments to be translated. (Default is [^\x00-\x7F])")]
     public string RegexPattern { get; set; } = @"[^\x00-\x7F]";
+
+    [Option('i', "includes", Required = false, HelpText = "Glob pattern to include files. (Default is **/*.cs)")]
+    public IEnumerable<string> Includes { get; set; } = ["**/*.cs"];
+
+    [Option('e', "excludes", Required = false, HelpText = "Glob pattern to exclude files. (Default is bin/*.* obj/*.*)")]
+    public IEnumerable<string> Excludes { get; set; } = ["bin/*.*", "obj/*.*"];
+
+    [Option('c', "capitalize", Required = false, HelpText = "Capitalize first letter of translated comments. (Default is true)")]
+    public bool CapitalizeFirstLetter { get; set; } = true;
 }

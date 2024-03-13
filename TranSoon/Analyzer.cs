@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.Extensions.FileSystemGlobbing;
 using ShellProgressBar;
 
 namespace TranSoon;
@@ -10,16 +11,16 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, bool
 {
     private readonly Func<string, bool> _shouldTranslate = translatable.IsMatch;
 
-    public async Task TranslateComments(string folderPath)
+    public async Task TranslateComments(string directoryPath, Matcher matcher)
     {
-        if (!Directory.Exists(folderPath))
+        if (!Directory.Exists(directoryPath))
         {
-            Console.WriteLine($"Folder {folderPath} does not exist.");
+            Console.WriteLine($"Folder {directoryPath} does not exist.");
 
             return;
         }
 
-        string[] csFiles = Directory.GetFiles(folderPath, "*.cs", SearchOption.AllDirectories);
+        string[] csFiles = matcher.GetResultsInFullPath(directoryPath).ToArray();
 
         int totalTicks = csFiles.Length;
 
@@ -34,7 +35,7 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, bool
             CollapseWhenFinished = false
         };
 
-        ProgressBar progressBar = new(totalTicks, folderPath, options);
+        ProgressBar progressBar = new(totalTicks, directoryPath, options);
 
         foreach (string file in csFiles)
         {
@@ -49,7 +50,7 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, bool
                 CollapseWhenFinished = true
             };
 
-            string filePath = Path.GetRelativePath(folderPath, file);
+            string filePath = Path.GetRelativePath(directoryPath, file);
 
             ChildProgressBar childProgressBar = progressBar.Spawn(1, filePath, childOptions);
 
