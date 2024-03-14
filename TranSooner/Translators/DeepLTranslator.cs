@@ -9,6 +9,6 @@ public class DeepLTranslator(CultureInfo targetCultureInfo, string apiKey, Cultu
 
     public async Task<string> TranslateAsync(string text)
     {
-        return (await _client.TranslateTextAsync(text, sourceCultureInfo?.DisplayName, targetCultureInfo.DisplayName)).Text;
+        return (await _client.TranslateTextAsync(text, sourceCultureInfo?.Name, targetCultureInfo.Name)).Text;
     }
 }
