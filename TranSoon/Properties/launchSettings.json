@@ -2,7 +2,7 @@
   "profiles": {
     "TranSoon": {
       "commandName": "Project",
-      "commandLineArgs": "-d \"C:\\Users\\sojan\\Documents\\Git\\GitHub\\DotnetSpider\\src\\DotnetSpider\" -e bin/*.* obj/*.* -y -s DEBUG"
+      "commandLineArgs": "-d \"C:\\Users\\sojan\\Documents\\Git\\GitHub\\DotnetSpider\\src\" -e bin/*.* obj/*.* -y -s DEBUG"
     }
   }
 }
