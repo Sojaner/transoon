@@ -1,16 +1,16 @@
 ﻿using System.Globalization;
+using Google.Cloud.Translation.V2;
 
 namespace TranSooner.Translators;
 
-public class GoogleTranslateTranslator : ITranslator
+public class GoogleTranslateTranslator(CultureInfo targetCultureInfo, string apiKey, CultureInfo? sourceCultureInfo = null) : ITranslator
 {
-    public GoogleTranslateTranslator(CultureInfo cultureInfo, string optionsApiKey)
-    {
-        throw new NotImplementedException();
-    }
+    private readonly TranslationClient _client = TranslationClient.CreateFromApiKey(apiKey);
 
-    public Task<string> TranslateAsync(string text)
+    public async Task<string> TranslateAsync(string text)
     {
-        throw new NotImplementedException();
+        return (await _client.TranslateTextAsync(text, targetCultureInfo.TwoLetterISOLanguageName,
+
+            sourceCultureInfo?.TwoLetterISOLanguageName)).TranslatedText;
     }
 }

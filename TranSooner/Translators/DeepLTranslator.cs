@@ -1,16 +1,14 @@
 ﻿using System.Globalization;
+using DeepL;
 
 namespace TranSooner.Translators;
 
-public class DeepLTranslator : ITranslator
+public class DeepLTranslator(CultureInfo targetCultureInfo, string apiKey, CultureInfo? sourceCultureInfo = null) : ITranslator
 {
-    public DeepLTranslator(CultureInfo getCultureInfo, string optionsApiKey)
-    {
-        throw new NotImplementedException();
-    }
+    private readonly Translator _client = new(apiKey);
 
-    public Task<string> TranslateAsync(string text)
+    public async Task<string> TranslateAsync(string text)
     {
-        throw new NotImplementedException();
+        return (await _client.TranslateTextAsync(text, sourceCultureInfo?.DisplayName, targetCultureInfo.DisplayName)).Text;
     }
 }

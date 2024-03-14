@@ -9,7 +9,7 @@ using ShellProgressBar;
 
 namespace TranSooner;
 
-internal partial class Analyzer(Regex translatable, ITranslator translator, bool capitalizeFirstLetter, IEnumerable<string> preprocessorSymbols)
+internal partial class Analyzer(Regex translatable, ITranslator translator, bool capitalizeFirstLetter, IEnumerable<string> preprocessorSymbols): IDisposable
 {
     private readonly Func<string, bool> _shouldTranslate = translatable.IsMatch;
 
@@ -315,4 +315,9 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, bool
 
     [GeneratedRegex(@"^(?<start>\s*)(?<content>.*)(?<end>\n?)", RegexOptions.Multiline)]
     private static partial Regex StringLine();
+
+    public void Dispose()
+    {
+        translator.Dispose();
+    }
 }

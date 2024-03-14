@@ -2,7 +2,6 @@
 using CommandLine;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.FileSystemGlobbing;
-using TranSoon;
 using TranSooner;
 using TranSooner.Translators;
 using Analyzer = TranSooner.Analyzer;
