@@ -37,7 +37,13 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, bool
             CollapseWhenFinished = false
         };
 
-        ProgressBar progressBar = new(totalTicks, directoryPath, options);
+        using ProgressBar progressBar = new(totalTicks, directoryPath, options);
+
+        int translated = 0;
+
+        int processed = 0;
+
+        int failed = 0;
 
         foreach (string file in csFiles)
         {
@@ -54,7 +60,7 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, bool
 
             string filePath = Path.GetRelativePath(directoryPath, file);
 
-            ChildProgressBar childProgressBar = progressBar.Spawn(0, filePath, childOptions);
+            using ChildProgressBar childProgressBar = progressBar.Spawn(0, filePath, childOptions);
 
             try
             {
@@ -65,21 +71,31 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, bool
                 if (code != source)
                 {
                     await File.WriteAllTextAsync(file, code);
+
+                    translated++;
                 }
 
                 progressBar.Tick();
+
+                processed++;
             }
             catch (Exception e)
             {
                 childOptions.ForegroundColor = ConsoleColor.DarkRed;
 
-                childOptions.CollapseWhenFinished = false;
+                childProgressBar.MaxTicks = childProgressBar.CurrentTick + 1;
 
-                childProgressBar.Tick($"{filePath}: {e.Message}");
+                childProgressBar.Tick();
 
                 progressBar.Tick();
+
+                progressBar.WriteErrorLine($"{filePath}: {e.Message}");
+
+                failed++;
             }
         }
+
+        progressBar.WriteLine($"Translation completed with {processed} processed, {translated} translated, and {failed} failed source files.");
     }
 
     private async Task<string> Translate(string codeText, ProgressBarBase progressBar)
@@ -272,7 +288,7 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, bool
     {
         if (!capitalize || string.IsNullOrEmpty(input)) return input;
 
-        if (char.IsLetter(input[0]) && !char.IsUpper(input[0]) && IsLatinLetter(input[0]) && input.Length >= 1)
+        if (input.Length >= 1 && char.IsLetter(input[0]) && !char.IsUpper(input[0]))
         {
             return char.ToUpper(input[0]) + input[1..];
         }
@@ -280,11 +296,6 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, bool
         {
             return input;
         }
-    }
-
-    private static bool IsLatinLetter(char c)
-    {
-        return c is >= 'A' and <= 'Z' or >= 'a' and <= 'z';
     }
 
     [GeneratedRegex(@"(?<start>\s*)/\*(?<content>.*?)(?<end>\s*)\*/\s*", RegexOptions.Multiline)]

@@ -33,4 +33,7 @@ internal class Options
 
     [Option('s', "symbols", Required = false, HelpText = "Preprocessor symbols to use with the C# parser for translating conditional code parts. (Default is no symbols)")]
     public IEnumerable<string> PreprocessorSymbols { get; set; } = [];
+
+    [Option('n', "no-logo", Required = false, HelpText = "Skip printing the logo. (Default is false)")]
+    public bool NoLogo { get; set; } = false;
 }

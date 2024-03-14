@@ -9,6 +9,15 @@ ConsoleColor consoleColor = Console.ForegroundColor;
 
 await Parser.Default.ParseArguments<Options>(args).WithParsedAsync(options =>
 {
+    if (!options.NoLogo)
+    {
+        Console.ForegroundColor = ConsoleColor.DarkCyan;
+
+        Console.WriteLine(Utilities.Logo);
+
+        Console.ForegroundColor = consoleColor;
+    }
+
     if (options.Translator.Equals("google", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(options.ApiKey) && !options.Acknowledged)
     {
         Console.ForegroundColor = ConsoleColor.DarkYellow;
