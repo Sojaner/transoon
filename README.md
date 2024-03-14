@@ -1,1 +1,1 @@
-Trans(~~late~~) C# source code comments and documentations
+***Tran-sooner*** (**sooner** rather than ~~later~~), for C# source code documentations, comments, and strings
