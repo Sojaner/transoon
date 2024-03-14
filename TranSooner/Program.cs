@@ -3,7 +3,10 @@ using CommandLine;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.FileSystemGlobbing;
 using TranSoon;
-using TranSoon.Translators;
+using TranSooner;
+using TranSooner.Translators;
+using Analyzer = TranSooner.Analyzer;
+using Utilities = TranSooner.Utilities;
 
 ConsoleColor consoleColor = Console.ForegroundColor;
 

@@ -1,9 +1,10 @@
 ﻿using System.Globalization;
-using TranSoon;
 
-public class DeepLTranslator : ITranslator
+namespace TranSooner.Translators;
+
+public class GoogleTranslateTranslator : ITranslator
 {
-    public DeepLTranslator(CultureInfo getCultureInfo, string optionsApiKey)
+    public GoogleTranslateTranslator(CultureInfo cultureInfo, string optionsApiKey)
     {
         throw new NotImplementedException();
     }

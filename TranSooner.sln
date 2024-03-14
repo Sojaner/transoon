@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TranSoon", "TranSoon\TranSoon.csproj", "{9241C784-4AF9-4BA6-928D-923D5D21337A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TranSooner", "TranSooner\TranSooner.csproj", "{9241C784-4AF9-4BA6-928D-923D5D21337A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

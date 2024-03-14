@@ -1,6 +1,6 @@
 ﻿using CommandLine;
 
-namespace TranSoon;
+namespace TranSooner;
 
 internal class Options
 {

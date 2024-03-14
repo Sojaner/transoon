@@ -1,7 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 using Figgle;
 
-namespace TranSoon
+namespace TranSooner
 {
     [GenerateFiggleText("Logo", "calgphy2", "TranSooner")]
     internal partial class Utilities

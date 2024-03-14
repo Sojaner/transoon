@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.FileSystemGlobbing;
 using ShellProgressBar;
 
-namespace TranSoon;
+namespace TranSooner;
 
 internal partial class Analyzer(Regex translatable, ITranslator translator, bool capitalizeFirstLetter, IEnumerable<string> preprocessorSymbols)
 {

@@ -1,4 +1,4 @@
-﻿namespace TranSoon
+﻿namespace TranSooner
 {
     internal interface ITranslator
     {

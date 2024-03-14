@@ -1,7 +1,7 @@
 ﻿using System.Globalization;
 using Newtonsoft.Json.Linq;
 
-namespace TranSoon.Translators
+namespace TranSooner.Translators
 {
     internal class GoogleTranslateDemoTranslator(CultureInfo targetCultureInfo, CultureInfo? sourceCultureInfo = null): ITranslator
     {
