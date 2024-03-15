@@ -6,6 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AssemblyName>transooner</AssemblyName>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>transooner</ToolCommandName>
   </PropertyGroup>
 
   <ItemGroup>

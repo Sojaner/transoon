@@ -36,4 +36,13 @@ internal class Options
 
     [Option('n', "no-logo", Required = false, HelpText = "Skip printing the logo. (Default is false)")]
     public bool NoLogo { get; set; } = false;
+
+    [Option("no-comments", Required = false, HelpText = "Skip translating comments. (Default is false)")]
+    public bool NoComments { get; set; } = false;
+
+    [Option("no-strings", Required = false, HelpText = "Skip translating strings. (Default is false)")]
+    public bool NoStrings { get; set; } = false;
+
+    [Option("no-xml-docs", Required = false, HelpText = "Skip translating XML documentation comments. (Default is false)")]
+    public bool NoXmlDocs { get; set; } = false;
 }

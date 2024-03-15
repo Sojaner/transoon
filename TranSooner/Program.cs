@@ -20,6 +20,8 @@ await Parser.Default.ParseArguments<Options>(args).WithParsedAsync(options =>
         Console.ForegroundColor = consoleColor;
     }
 
+    Console.WriteLine("Translating comments...");
+
     if (options.Translator.Equals("google", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(options.ApiKey) && !options.Acknowledged)
     {
         Console.ForegroundColor = ConsoleColor.DarkYellow;
