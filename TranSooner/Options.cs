@@ -45,4 +45,7 @@ internal class Options
 
     [Option("no-xml-docs", Required = false, HelpText = "Skip translating XML documentation comments. (Default is false)")]
     public bool NoXmlDocs { get; set; } = false;
+
+    [Option("no-progress", Required = false, HelpText = "Skip printing progress. (Default is false)")]
+    public bool NoProgress { get; set; } = false;
 }

@@ -14,6 +14,8 @@ await Parser.Default.ParseArguments<Options>(args).WithParsedAsync(options =>
 {
     string version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "1.0.0";
 
+    bool noColor = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("NO_COLOR"));
+
     if (options is {NoComments: true, NoStrings: true, NoXmlDocs: true})
     {
         Console.WriteLine($"TranSooner v{version}");
@@ -27,7 +29,7 @@ await Parser.Default.ParseArguments<Options>(args).WithParsedAsync(options =>
 
     if (!options.NoLogo)
     {
-        Console.ForegroundColor = ConsoleColor.DarkCyan;
+        Console.ForegroundColor = noColor ? consoleColor : ConsoleColor.DarkCyan;
 
         Console.WriteLine(Utilities.Logo);
 
@@ -40,11 +42,11 @@ await Parser.Default.ParseArguments<Options>(args).WithParsedAsync(options =>
 
     if (options.Translator.Equals("google", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(options.ApiKey) && !options.Acknowledged)
     {
-        Console.ForegroundColor = ConsoleColor.DarkYellow;
+        Console.ForegroundColor = noColor ? consoleColor : ConsoleColor.DarkYellow;
 
         Console.WriteLine("NOTE: Using Google Translate without and API Key will switch to Google's free Translation API that is provided only for demo purposes and should not be used in commercial and production environments.");
 
-        Console.ResetColor();
+        Console.ForegroundColor = consoleColor;
 
         Console.WriteLine();
 
@@ -99,7 +101,7 @@ await Parser.Default.ParseArguments<Options>(args).WithParsedAsync(options =>
         matcher.AddExcludePatterns(excludes);
     }
 
-    return new Analyzer(new Regex(options.RegexPattern), translator, options.CapitalizeFirstLetter, options.PreprocessorSymbols).TranslateComments(options.DirectoryPath, matcher);
+    return new Analyzer(new Regex(options.RegexPattern), translator, options, noColor).TranslateAsync(options.DirectoryPath, matcher);
 });
 
 Console.ForegroundColor = consoleColor;

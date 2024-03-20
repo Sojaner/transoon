@@ -10,14 +10,16 @@ using ShellProgressBar;
 
 namespace TranSooner;
 
-internal partial class Analyzer(Regex translatable, ITranslator translator, Options options)
+internal partial class Analyzer(Regex translatable, ITranslator translator, Options options, bool noColor)
 {
     private readonly Func<string, bool> _shouldTranslate = text => !string.IsNullOrWhiteSpace(text) && translatable.IsMatch(text);
 
     private readonly IMemoryCache _translationsCache = new MemoryCache(new MemoryCacheOptions());
 
-    public async Task TranslateComments(string directoryPath, Matcher matcher)
+    public async Task TranslateAsync(string directoryPath, Matcher matcher)
     {
+        ConsoleColor consoleColor = Console.ForegroundColor;
+
         if (!Directory.Exists(directoryPath))
         {
             Console.WriteLine($"Folder {directoryPath} does not exist.");
@@ -31,16 +33,16 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, Opti
 
         ProgressBarOptions progressBarOptions = new ()
         {
-            ForegroundColor = ConsoleColor.Yellow,
+            ForegroundColor = noColor ? consoleColor : ConsoleColor.Yellow,
 
-            BackgroundColor = ConsoleColor.DarkYellow,
+            BackgroundColor = noColor ? consoleColor : ConsoleColor.DarkYellow,
 
             ProgressCharacter = '─',
 
             CollapseWhenFinished = false
         };
 
-        using ProgressBar progressBar = new(totalTicks, directoryPath, progressBarOptions);
+        using ProgressBar? progressBar = options.NoProgress || Console.IsOutputRedirected ? null : new ProgressBar(totalTicks, directoryPath, progressBarOptions);
 
         int translated = 0;
 
@@ -52,9 +54,9 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, Opti
         {
             ProgressBarOptions childOptions = new()
             {
-                ForegroundColor = ConsoleColor.Green,
+                ForegroundColor = noColor ? consoleColor : ConsoleColor.Green,
 
-                BackgroundColor = ConsoleColor.DarkGreen,
+                BackgroundColor = noColor ? consoleColor : ConsoleColor.DarkGreen,
 
                 ProgressCharacter = '─',
 
@@ -63,7 +65,7 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, Opti
 
             string filePath = Path.GetRelativePath(directoryPath, file);
 
-            using ChildProgressBar childProgressBar = progressBar.Spawn(0, filePath, childOptions);
+            using ChildProgressBar? childProgressBar = progressBar?.Spawn(0, filePath, childOptions);
 
             try
             {
@@ -78,30 +80,30 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, Opti
                     translated++;
                 }
 
-                progressBar.Tick();
+                progressBar?.Tick();
 
                 processed++;
             }
             catch (Exception e)
             {
-                childOptions.ForegroundColor = ConsoleColor.DarkRed;
+                childOptions.ForegroundColor = noColor ? consoleColor : ConsoleColor.DarkRed;
 
-                childProgressBar.MaxTicks = childProgressBar.CurrentTick + 1;
+                if(childProgressBar != null) childProgressBar.MaxTicks = childProgressBar.CurrentTick + 1;
 
-                childProgressBar.Tick();
+                childProgressBar?.Tick();
 
-                progressBar.Tick();
+                progressBar?.Tick();
 
-                progressBar.WriteErrorLine($"{filePath}: {e.Message}");
+                progressBar?.WriteErrorLine($"{filePath}: {e.Message}");
 
                 failed++;
             }
         }
 
-        progressBar.WriteLine($"Translation completed with {processed} processed, {translated} translated, and {failed} failed source files.");
+        progressBar?.WriteLine($"Translation completed with {processed} processed, {translated} translated, and {failed} failed source files.");
     }
 
-    private async Task<string> TranslateAsync(string codeText, ProgressBarBase progressBar)
+    private async Task<string> TranslateAsync(string codeText, ProgressBarBase? progressBar)
     {
         StringBuilder code = new(codeText);
 
@@ -129,14 +131,14 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, Opti
 
         if (trivia.Count == 0 && nodes.Count == 0)
         {
-            progressBar.MaxTicks = 1;
+            if (progressBar != null) progressBar.MaxTicks = 1;
 
-            progressBar.Tick();
+            progressBar?.Tick();
 
             return codeText;
         }
 
-        if (progressBar.MaxTicks == 0)
+        if (progressBar?.MaxTicks == 0)
         {
             progressBar.MaxTicks = trivia.Count + nodes.Count;
         }
@@ -168,7 +170,7 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, Opti
 
                 string result = string.Join("", outputs);
                 
-                progressBar.Tick();
+                progressBar?.Tick();
 
                 if (ReplaceCode(code, syntaxTrivia.FullSpan, codeSegment, result))
                 {
@@ -189,7 +191,7 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, Opti
 
                 string result = $"{match.Groups["space"]}{match.Groups["between"]}{translation}";
 
-                progressBar.Tick();
+                progressBar?.Tick();
 
                 if (ReplaceCode(code, syntaxTrivia.FullSpan, codeSegment, result))
                 {
@@ -219,7 +221,7 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, Opti
 
                 string result = $"{whole.Groups["start"]}/*{whole.Groups["comment"]}{string.Join("", outputs)}{whole.Groups["end"]}*/";
 
-                progressBar.Tick();
+                progressBar?.Tick();
 
                 if (ReplaceCode(code, syntaxTrivia.FullSpan, codeSegment, result))
                 {
@@ -228,7 +230,7 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, Opti
             }
             else
             {
-                progressBar.Tick();
+                progressBar?.Tick();
             }
         }
 
@@ -259,7 +261,7 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, Opti
 
                 string result = $"{whole.Groups["start"]}{string.Join("", outputs)}{whole.Groups["end"]}";
 
-                progressBar.Tick();
+                progressBar?.Tick();
 
                 if (ReplaceCode(code, syntaxNode.FullSpan, codeSegment, result))
                 {
@@ -268,7 +270,7 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, Opti
             }
             else
             {
-                progressBar.Tick();
+                progressBar?.Tick();
             }
         }
 
