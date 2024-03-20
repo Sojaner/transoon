@@ -7,6 +7,8 @@ public class DeepLTranslator(CultureInfo targetCultureInfo, string apiKey, Cultu
 {
     private readonly Translator _client = new(apiKey);
 
+    public string Name => "DeepL Translator";
+
     public async Task<string> TranslateAsync(string text)
     {
         return (await _client.TranslateTextAsync(text, sourceCultureInfo?.Name, targetCultureInfo.Name)).Text;

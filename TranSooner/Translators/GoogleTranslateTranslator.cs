@@ -7,6 +7,8 @@ public class GoogleTranslateTranslator(CultureInfo targetCultureInfo, string api
 {
     private readonly TranslationClient _client = TranslationClient.CreateFromApiKey(apiKey);
 
+    public string Name => "Google Translator";
+
     public async Task<string> TranslateAsync(string text)
     {
         return (await _client.TranslateTextAsync(text, targetCultureInfo.TwoLetterISOLanguageName,

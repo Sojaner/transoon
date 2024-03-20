@@ -50,6 +50,8 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, Opti
 
         int failed = 0;
 
+        Statistics statistics = new();
+
         foreach (string file in csFiles)
         {
             ProgressBarOptions childOptions = new()
@@ -71,7 +73,7 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, Opti
             {
                 string source = await File.ReadAllTextAsync(file);
 
-                string code = await TranslateAsync(source, childProgressBar);
+                string code = await TranslateAsync(source, childProgressBar, statistics);
 
                 if (code != source)
                 {
@@ -100,10 +102,16 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, Opti
             }
         }
 
-        progressBar?.WriteLine($"Translation completed with {processed} processed, {translated} translated, and {failed} failed source files.");
+        Action<string> writeLine = progressBar != null ? progressBar.WriteLine : Console.WriteLine;
+
+        writeLine("Translation completed!");
+        writeLine($"Processed source files: {processed}");
+        writeLine($"Translated source files: {translated}");
+        writeLine($"Failed source files: {failed}");
+        writeLine($"""Characters sent to "{translator.Name}": {statistics.Characters}""");
     }
 
-    private async Task<string> TranslateAsync(string codeText, ProgressBarBase? progressBar)
+    private async Task<string> TranslateAsync(string codeText, ProgressBarBase? progressBar, Statistics statistics)
     {
         StringBuilder code = new(codeText);
 
@@ -161,7 +169,7 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, Opti
 
                     string translation = _shouldTranslate(text)
 
-                        ? await TranslateAsync(text)
+                        ? await TranslateAsync(text, statistics)
 
                         : text;
 
@@ -174,7 +182,7 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, Opti
 
                 if (ReplaceCode(code, syntaxTrivia.FullSpan, codeSegment, result))
                 {
-                    return await TranslateAsync(code.ToString(), progressBar);
+                    return await TranslateAsync(code.ToString(), progressBar, statistics);
                 }
             }
             else if (shouldTranslate && syntaxTrivia.IsKind(SyntaxKind.SingleLineCommentTrivia))
@@ -185,7 +193,7 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, Opti
 
                 string translation = _shouldTranslate(codeSegment)
 
-                    ? await TranslateAsync(text)
+                    ? await TranslateAsync(text, statistics)
 
                     : text;
 
@@ -195,7 +203,7 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, Opti
 
                 if (ReplaceCode(code, syntaxTrivia.FullSpan, codeSegment, result))
                 {
-                    return await TranslateAsync(code.ToString(), progressBar);
+                    return await TranslateAsync(code.ToString(), progressBar, statistics);
                 }
             }
             else if (shouldTranslate && (syntaxTrivia.IsKind(SyntaxKind.MultiLineCommentTrivia) || syntaxTrivia.IsKind(SyntaxKind.MultiLineDocumentationCommentTrivia)))
@@ -212,7 +220,7 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, Opti
 
                     string translation = _shouldTranslate(text)
 
-                        ? await TranslateAsync(text)
+                        ? await TranslateAsync(text, statistics)
 
                         : text;
 
@@ -225,7 +233,7 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, Opti
 
                 if (ReplaceCode(code, syntaxTrivia.FullSpan, codeSegment, result))
                 {
-                    return await TranslateAsync(code.ToString(), progressBar);
+                    return await TranslateAsync(code.ToString(), progressBar, statistics);
                 }
             }
             else
@@ -252,7 +260,7 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, Opti
 
                     string translation = _shouldTranslate(text)
 
-                        ? await TranslateAsync(text)
+                        ? await TranslateAsync(text, statistics)
 
                         : text;
 
@@ -265,7 +273,7 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, Opti
 
                 if (ReplaceCode(code, syntaxNode.FullSpan, codeSegment, result))
                 {
-                    return await TranslateAsync(code.ToString(), progressBar);
+                    return await TranslateAsync(code.ToString(), progressBar, statistics);
                 }
             }
             else
@@ -275,27 +283,27 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, Opti
         }
 
         return code.ToString();
-
-        static bool ReplaceCode(StringBuilder stringBuilder, TextSpan textSpan, string source, string result)
-        {
-            if (source == result)
-            {
-                return false;
-            }
-
-            stringBuilder.Remove(textSpan.Start, textSpan.Length)
-
-                .Insert(textSpan.Start, result);
-
-            return true;
-        }
     }
 
-    private async Task<string> TranslateAsync(string text)
+    private static bool ReplaceCode(StringBuilder stringBuilder, TextSpan textSpan, string source, string result)
+    {
+        if (source == result)
+        {
+            return false;
+        }
+
+        stringBuilder.Remove(textSpan.Start, textSpan.Length).Insert(textSpan.Start, result);
+
+        return true;
+    }
+
+    private async Task<string> TranslateAsync(string text, Statistics statistics)
     {
         return (await _translationsCache.GetOrCreateAsync(text, async entry =>
         {
             entry.AbsoluteExpiration = DateTimeOffset.MaxValue;
+
+            statistics.Characters += text.Length;
 
             return CapitalizeFirstLetter(text, await translator.TranslateAsync(text), options.CapitalizeFirstLetter);
 

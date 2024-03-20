@@ -7,6 +7,8 @@ namespace TranSooner.Translators
     {
         private readonly HttpClient _client = new();
 
+        public string Name => "Google Translator's free API";
+
         public async Task<string> TranslateAsync(string text)
         {
             string url = $"https://translate.googleapis.com/translate_a/single?client=gtx&sl={sourceCultureInfo?.TwoLetterISOLanguageName ?? "auto"}&tl={targetCultureInfo.TwoLetterISOLanguageName}&dt=t&q={Uri.EscapeDataString(text)}";
