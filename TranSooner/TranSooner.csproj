@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -8,6 +8,12 @@
     <AssemblyName>transooner</AssemblyName>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>transooner</ToolCommandName>
+    <Authors>Rojan Gh.</Authors>
+    <Description>A .NET Global Tool for translating all the documentations, comments, and strings in a C# codebase.</Description>
+    <PackageProjectUrl>https://github.com/Sojaner/transooner</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Sojaner/transooner</RepositoryUrl>
+    <RepositoryType>Github</RepositoryType>
+    <PackageTags>language documentation translator translation csharp command-line dotnet source translate dotnet-core languages command-line-tool source-code dotnet-global-tool</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
