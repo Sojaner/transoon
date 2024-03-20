@@ -107,7 +107,7 @@ await Parser.Default.ParseArguments<Options>(args).WithParsedAsync(options =>
         matcher.AddExcludePatterns(excludes);
     }
 
-    return new Analyzer(new Regex(options.RegexPattern), translator, options, noColor).TranslateAsync(options.DirectoryPath, matcher);
+    return new Analyzer(new Regex(options.RegexPattern), translator, options, noColor).TranslateAsync(matcher);
 });
 
 Console.ForegroundColor = consoleColor;

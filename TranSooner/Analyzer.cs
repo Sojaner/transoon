@@ -16,8 +16,10 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, Opti
 
     private readonly IMemoryCache _translationsCache = new MemoryCache(new MemoryCacheOptions());
 
-    public async Task TranslateAsync(string directoryPath, Matcher matcher)
+    public async Task TranslateAsync(Matcher matcher)
     {
+        string directoryPath = Path.IsPathRooted(options.DirectoryPath) ? options.DirectoryPath : Path.Combine(Directory.GetCurrentDirectory(), options.DirectoryPath);
+        
         ConsoleColor consoleColor = Console.ForegroundColor;
 
         if (!Directory.Exists(directoryPath))
