@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -216,7 +216,7 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, Opti
 
                         : text;
 
-                    outputs.Add($"{match.Groups["space"]}{translation}");
+                    outputs.Add($"{match.Groups["start"]}{translation}{match.Groups["end"]}");
                 }
 
                 string result = $"{whole.Groups["start"]}/*{whole.Groups["comment"]}{string.Join("", outputs)}{whole.Groups["end"]}*/";
@@ -316,10 +316,10 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, Opti
         }
     }
 
-    [GeneratedRegex(@"(?<start>\s*)/\*(?<comment>\*)?(?<content>.*?|)(?<end>\s*)\*/\s*", RegexOptions.Multiline)]
+    [GeneratedRegex(@"(?<start>\s*)/\*(?<comment>\*?)(?<content>.*?)(?<end>\s*)\*/\s*", RegexOptions.Singleline)]
     private static partial Regex WholeMultiLineComment();
 
-    [GeneratedRegex(@"^(?<space>\s*\*?\s*)(?<content>.*?)\s*?$")]
+    [GeneratedRegex(@"^(?<start>\s*\*?\s*)(?<content>.*?)(?<end>\s*?)$", RegexOptions.Multiline)]
     private static partial Regex MultiLineCommentLine();
 
     [GeneratedRegex(@"^(?<space>\s*)(?<between>//\s*)(?<content>.*?)\s*$", RegexOptions.Multiline)]
