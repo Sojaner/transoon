@@ -18,7 +18,7 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, Opti
 
     public async Task TranslateAsync(Matcher matcher)
     {
-        string directoryPath = Path.IsPathRooted(options.DirectoryPath) ? options.DirectoryPath : Path.Combine(Directory.GetCurrentDirectory(), options.DirectoryPath);
+        string directoryPath = Path.GetFullPath(Path.IsPathRooted(options.DirectoryPath) ? options.DirectoryPath : Path.Combine(Directory.GetCurrentDirectory(), options.DirectoryPath));
         
         ConsoleColor consoleColor = Console.ForegroundColor;
 
