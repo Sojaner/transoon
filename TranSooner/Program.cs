@@ -12,7 +12,7 @@ ConsoleColor consoleColor = Console.ForegroundColor;
 
 await Parser.Default.ParseArguments<Options>(args).WithParsedAsync(options =>
 {
-    string version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "1.0.0";
+    string version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "1.0.0.0";
 
     bool noColor = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("NO_COLOR"));
 
@@ -33,12 +33,18 @@ await Parser.Default.ParseArguments<Options>(args).WithParsedAsync(options =>
 
         Console.WriteLine(Utilities.Logo);
 
+        Console.WriteLine($"TranSooner v{version}");
+
+        Console.WriteLine();
+
         Console.ForegroundColor = consoleColor;
     }
+    else
+    {
+        Console.WriteLine($"TranSooner v{version}");
 
-    Console.WriteLine($"TranSooner v{version}");
-
-    Console.WriteLine();
+        Console.WriteLine();
+    }
 
     if (options.Translator.Equals("google", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(options.ApiKey) && !options.Acknowledged)
     {
