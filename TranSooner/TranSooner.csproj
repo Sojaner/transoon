@@ -16,6 +16,7 @@
     <PackageReference Include="Figgle.Generator" Version="0.5.1" />
     <PackageReference Include="Google.Cloud.Translation.V2" Version="3.3.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.9.2" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" Version="8.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="ShellProgressBar" Version="5.2.0" />

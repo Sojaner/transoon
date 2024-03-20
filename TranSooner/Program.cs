@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Reflection;
 using CommandLine;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.FileSystemGlobbing;
@@ -11,6 +12,19 @@ ConsoleColor consoleColor = Console.ForegroundColor;
 
 await Parser.Default.ParseArguments<Options>(args).WithParsedAsync(options =>
 {
+    string version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "1.0.0";
+
+    if (options is {NoComments: true, NoStrings: true, NoXmlDocs: true})
+    {
+        Console.WriteLine($"TranSooner v{version}");
+
+        Console.WriteLine();
+
+        Console.WriteLine("Nothing to translate as instructed to skip comments, strings, and XML documentation. Exiting...");
+
+        return Task.CompletedTask;
+    }
+
     if (!options.NoLogo)
     {
         Console.ForegroundColor = ConsoleColor.DarkCyan;
@@ -20,7 +34,9 @@ await Parser.Default.ParseArguments<Options>(args).WithParsedAsync(options =>
         Console.ForegroundColor = consoleColor;
     }
 
-    Console.WriteLine("Translating comments...");
+    Console.WriteLine($"TranSooner v{version}");
+
+    Console.WriteLine();
 
     if (options.Translator.Equals("google", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(options.ApiKey) && !options.Acknowledged)
     {

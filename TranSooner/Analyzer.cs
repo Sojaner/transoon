@@ -4,14 +4,17 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.FileSystemGlobbing;
 using ShellProgressBar;
 
 namespace TranSooner;
 
-internal partial class Analyzer(Regex translatable, ITranslator translator, bool capitalizeFirstLetter, IEnumerable<string> preprocessorSymbols)
+internal partial class Analyzer(Regex translatable, ITranslator translator, Options options)
 {
-    private readonly Func<string, bool> _shouldTranslate = translatable.IsMatch;
+    private readonly Func<string, bool> _shouldTranslate = text => !string.IsNullOrWhiteSpace(text) && translatable.IsMatch(text);
+
+    private readonly IMemoryCache _translationsCache = new MemoryCache(new MemoryCacheOptions());
 
     public async Task TranslateComments(string directoryPath, Matcher matcher)
     {
@@ -26,7 +29,7 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, bool
 
         int totalTicks = csFiles.Length;
 
-        ProgressBarOptions options = new ()
+        ProgressBarOptions progressBarOptions = new ()
         {
             ForegroundColor = ConsoleColor.Yellow,
 
@@ -37,7 +40,7 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, bool
             CollapseWhenFinished = false
         };
 
-        using ProgressBar progressBar = new(totalTicks, directoryPath, options);
+        using ProgressBar progressBar = new(totalTicks, directoryPath, progressBarOptions);
 
         int translated = 0;
 
@@ -66,7 +69,7 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, bool
             {
                 string source = await File.ReadAllTextAsync(file);
 
-                string code = await Translate(source, childProgressBar);
+                string code = await TranslateAsync(source, childProgressBar);
 
                 if (code != source)
                 {
@@ -98,15 +101,15 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, bool
         progressBar.WriteLine($"Translation completed with {processed} processed, {translated} translated, and {failed} failed source files.");
     }
 
-    private async Task<string> Translate(string codeText, ProgressBarBase progressBar)
+    private async Task<string> TranslateAsync(string codeText, ProgressBarBase progressBar)
     {
         StringBuilder code = new(codeText);
 
-        SyntaxTree tree = CSharpSyntaxTree.ParseText(code.ToString(), new CSharpParseOptions(preprocessorSymbols: preprocessorSymbols));
+        SyntaxTree tree = CSharpSyntaxTree.ParseText(code.ToString(), new CSharpParseOptions(preprocessorSymbols: options.PreprocessorSymbols));
 
         CompilationUnitSyntax root = tree.GetCompilationUnitRoot();
 
-        List<SyntaxNode> nodes = (await tree.GetRootAsync()).DescendantNodes()
+        List<SyntaxNode> nodes =  options.NoStrings ? [] : (await tree.GetRootAsync()).DescendantNodes()
 
             .Where(node => node is InterpolatedStringExpressionSyntax or LiteralExpressionSyntax
             {
@@ -116,11 +119,13 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, bool
 
         List<SyntaxTrivia> trivia = root.DescendantTrivia()
 
-            .Where(trivia => trivia.IsKind(SyntaxKind.SingleLineCommentTrivia) ||
+            .Where(trivia => (!options.NoComments && trivia.IsKind(SyntaxKind.SingleLineCommentTrivia)) ||
 
-                             trivia.IsKind(SyntaxKind.MultiLineCommentTrivia) ||
+                             (!options.NoComments && trivia.IsKind(SyntaxKind.MultiLineCommentTrivia)) ||
 
-                             trivia.IsKind(SyntaxKind.SingleLineDocumentationCommentTrivia)).ToList();
+                             (!options.NoXmlDocs && trivia.IsKind(SyntaxKind.SingleLineDocumentationCommentTrivia)) ||
+
+                             (!options.NoXmlDocs && trivia.IsKind(SyntaxKind.MultiLineDocumentationCommentTrivia))).ToList();
 
         if (trivia.Count == 0 && nodes.Count == 0)
         {
@@ -154,7 +159,7 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, bool
 
                     string translation = _shouldTranslate(text)
 
-                        ? CapitalizeFirstLetter(await translator.TranslateAsync(text), capitalizeFirstLetter)
+                        ? await TranslateAsync(text)
 
                         : text;
 
@@ -167,20 +172,20 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, bool
 
                 if (ReplaceCode(code, syntaxTrivia.FullSpan, codeSegment, result))
                 {
-                    return await Translate(code.ToString(), progressBar);
+                    return await TranslateAsync(code.ToString(), progressBar);
                 }
             }
             else if (shouldTranslate && syntaxTrivia.IsKind(SyntaxKind.SingleLineCommentTrivia))
             {
                 Match match = SingleLineComment().Match(codeSegment);
 
-                string content = match.Groups["content"].Value;
+                string text = match.Groups["content"].Value;
 
                 string translation = _shouldTranslate(codeSegment)
 
-                    ? CapitalizeFirstLetter(await translator.TranslateAsync(content), capitalizeFirstLetter)
+                    ? await TranslateAsync(text)
 
-                    : content;
+                    : text;
 
                 string result = $"{match.Groups["space"]}{match.Groups["between"]}{translation}";
 
@@ -188,10 +193,10 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, bool
 
                 if (ReplaceCode(code, syntaxTrivia.FullSpan, codeSegment, result))
                 {
-                    return await Translate(code.ToString(), progressBar);
+                    return await TranslateAsync(code.ToString(), progressBar);
                 }
             }
-            else if (shouldTranslate && syntaxTrivia.IsKind(SyntaxKind.MultiLineCommentTrivia))
+            else if (shouldTranslate && (syntaxTrivia.IsKind(SyntaxKind.MultiLineCommentTrivia) || syntaxTrivia.IsKind(SyntaxKind.MultiLineDocumentationCommentTrivia)))
             {
                 Match whole = WholeMultiLineComment().Match(codeSegment);
 
@@ -205,20 +210,20 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, bool
 
                     string translation = _shouldTranslate(text)
 
-                        ? CapitalizeFirstLetter(await translator.TranslateAsync(text), capitalizeFirstLetter)
+                        ? await TranslateAsync(text)
 
                         : text;
 
                     outputs.Add($"{match.Groups["space"]}{translation}");
                 }
 
-                string result = $"{whole.Groups["start"]}/*{string.Join("", outputs)}{whole.Groups["end"]}*/";
+                string result = $"{whole.Groups["start"]}/*{whole.Groups["comment"]}{string.Join("", outputs)}{whole.Groups["end"]}*/";
 
                 progressBar.Tick();
 
                 if (ReplaceCode(code, syntaxTrivia.FullSpan, codeSegment, result))
                 {
-                    return await Translate(code.ToString(), progressBar);
+                    return await TranslateAsync(code.ToString(), progressBar);
                 }
             }
             else
@@ -241,13 +246,13 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, bool
 
                 foreach (Match match in matches.Cast<Match>())
                 {
-                    string content = match.Groups["content"].Value;
+                    string text = match.Groups["content"].Value;
 
-                    string translation = _shouldTranslate(content)
+                    string translation = _shouldTranslate(text)
 
-                        ? CapitalizeFirstLetter(await translator.TranslateAsync(content), capitalizeFirstLetter)
+                        ? await TranslateAsync(text)
 
-                        : content;
+                        : text;
 
                     outputs.Add($"{match.Groups["start"]}{translation}{match.Groups["end"]}");
                 }
@@ -258,7 +263,7 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, bool
 
                 if (ReplaceCode(code, syntaxNode.FullSpan, codeSegment, result))
                 {
-                    return await Translate(code.ToString(), progressBar);
+                    return await TranslateAsync(code.ToString(), progressBar);
                 }
             }
             else
@@ -284,21 +289,32 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, bool
         }
     }
 
-    private static string CapitalizeFirstLetter(string input, bool capitalize)
+    private async Task<string> TranslateAsync(string text)
     {
-        if (!capitalize || string.IsNullOrEmpty(input)) return input;
-
-        if (input.Length >= 1 && char.IsLetter(input[0]) && !char.IsUpper(input[0]))
+        return (await _translationsCache.GetOrCreateAsync(text, async entry =>
         {
-            return char.ToUpper(input[0]) + input[1..];
+            entry.AbsoluteExpiration = DateTimeOffset.MaxValue;
+
+            return CapitalizeFirstLetter(text, await translator.TranslateAsync(text), options.CapitalizeFirstLetter);
+
+        }))!;
+    }
+
+    private static string CapitalizeFirstLetter(string source, string translated, bool capitalize)
+    {
+        if (!capitalize || string.IsNullOrEmpty(translated)) return translated;
+
+        if (translated.Length >= 1 && (source.Length < 1 || source[0] != translated[0]) && char.IsLetter(translated[0]) && !char.IsUpper(translated[0]))
+        {
+            return char.ToUpper(translated[0]) + translated[1..];
         }
         else
         {
-            return input;
+            return translated;
         }
     }
 
-    [GeneratedRegex(@"(?<start>\s*)/\*(?<content>.*?)(?<end>\s*)\*/\s*", RegexOptions.Multiline)]
+    [GeneratedRegex(@"(?<start>\s*)/\*(?<comment>\*)?(?<content>.*?|)(?<end>\s*)\*/\s*", RegexOptions.Multiline)]
     private static partial Regex WholeMultiLineComment();
 
     [GeneratedRegex(@"^(?<space>\s*\*?\s*)(?<content>.*?)\s*?$")]
