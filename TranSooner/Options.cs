@@ -1,4 +1,4 @@
-﻿using CommandLine;
+using CommandLine;
 
 namespace TranSooner;
 
@@ -43,7 +43,7 @@ internal class Options
     [Option("no-strings", Required = false, HelpText = "Skip translating strings. (Default is false)")]
     public bool NoStrings { get; set; } = false;
 
-    [Option("no-xml-docs", Required = false, HelpText = "Skip translating XML documentation comments. (Default is false)")]
+    [Option("no-documentations", Required = false, HelpText = "Skip translating documentation comments. (Default is false)")]
     public bool NoXmlDocs { get; set; } = false;
 
     [Option("no-progress", Required = false, HelpText = "Skip printing progress. (Default is false)")]
