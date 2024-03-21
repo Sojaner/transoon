@@ -21,16 +21,16 @@ transooner -d /Users/sojaner/Git/GitHub/DotnetSpider -k AIzaSyD-7kgBVqzyJb0e6k3y
 | -k, --api-key       | Translate API Key.                                                                                           |                            | true     |
 | -t, --translator    | Translator to use (google, deepl).                                                                           | google                     | true     |
 | -l, --language      | Language to translate to.                                                                                    | en-US                      | true     |
-| -r, --regex         | Regex pattern to match comments to be translated.                                                            | [^\x00-\x7F]               | true     |
+| -r, --regex         | Regex pattern to match text to be translated.                                                                | [^\x00-\x7F]               | true     |
 | -i, --includes      | Glob pattern to include files.                                                                               | **/*.cs                    | true     |
 | -e, --excludes      | Glob pattern to exclude files.                                                                               | bin/*.* obj/*.*            | true     |
-| -c, --capitalize    | Capitalize first letter of translated comments.                                                              | true                       | true     |
+| -c, --capitalize    | Capitalize first letter of translated text.                                                                  | true                       | true     |
 | -y, --yes           | Acknowledge and disable the "Google's free Translation API" usage warning by implicitly answering "yes".     | false                      | true     |
 | -s, --symbols       | Preprocessor symbols to use with the C# parser for translating conditional code parts.                       | no symbols                 | true     |
 | -n, --no-logo       | Skip printing the logo.                                                                                      | false                      | true     |
 | --no-comments       | Skip translating comments.                                                                                   | false                      | true     |
 | --no-strings        | Skip translating strings.                                                                                    | false                      | true     |
-| --no-documentation  | Skip translating documentation comments.                                                                     | false                      | true     |
+| --no-documentation  | Skip translating documentation.                                                                              | false                      | true     |
 | --no-progress       | Skip printing progress.                                                                                      | false                      | true     |
 | --help              | Display this help screen.                                                                                    |                            |          |
 | --version           | Display version information.                                                                                 |                            |          |
