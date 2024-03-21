@@ -44,7 +44,7 @@ internal class Options
     public bool NoStrings { get; set; } = false;
 
     [Option("no-documentation", Required = false, HelpText = "Skip translating documentation comments. (Default is false)")]
-    public bool NoXmlDocs { get; set; } = false;
+    public bool NoDocs { get; set; } = false;
 
     [Option("no-progress", Required = false, HelpText = "Skip printing progress. (Default is false)")]
     public bool NoProgress { get; set; } = false;

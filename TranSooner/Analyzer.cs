@@ -135,9 +135,9 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, Opti
 
                              (!options.NoComments && trivia.IsKind(SyntaxKind.MultiLineCommentTrivia)) ||
 
-                             (!options.NoXmlDocs && trivia.IsKind(SyntaxKind.SingleLineDocumentationCommentTrivia)) ||
+                             (!options.NoDocs && trivia.IsKind(SyntaxKind.SingleLineDocumentationCommentTrivia)) ||
 
-                             (!options.NoXmlDocs && trivia.IsKind(SyntaxKind.MultiLineDocumentationCommentTrivia))).ToList();
+                             (!options.NoDocs && trivia.IsKind(SyntaxKind.MultiLineDocumentationCommentTrivia))).ToList();
 
         if (trivia.Count == 0 && nodes.Count == 0)
         {
