@@ -12,7 +12,7 @@ dotnet tool install -g transooner
 ```bash
 transooner -d /Users/sojaner/Git/GitHub/DotnetSpider -k AIzaSyD-7kgBVqzyJb0e6k3yvh1PEw0F42xS4T8 -t google -s Debug #The API key here is a dummy API key
 ```
-- **Important note:** Using ***Google Translate*** without an API Key will switch to ***Google's free Translation API** that is provided only for ***demo purposes*** and should not be used in commercial and production environments.
+- **Important note:** Using ***Google Translate*** without an API Key will switch to ***Google's free Translation API*** that is provided only for ***demo purposes*** and should not be used in commercial and production environments.
 
 ### Usage options
 | Option              | Description                                                                                                  | Default                    | Optional |
