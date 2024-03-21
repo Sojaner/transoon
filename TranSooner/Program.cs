@@ -16,13 +16,13 @@ await Parser.Default.ParseArguments<Options>(args).WithParsedAsync(options =>
 
     bool noColor = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("NO_COLOR"));
 
-    if (options is {NoComments: true, NoStrings: true, NoXmlDocs: true})
+    if (options is {NoComments: true, NoStrings: true, NoDocs: true})
     {
         Console.WriteLine($"TranSooner v{version}");
 
         Console.WriteLine();
 
-        Console.WriteLine("Nothing to translate as instructed to skip comments, strings, and XML documentation. Exiting...");
+        Console.WriteLine("Nothing to translate as instructed to skip comments, strings, and documentation. Exiting...");
 
         return Task.CompletedTask;
     }
