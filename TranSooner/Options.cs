@@ -48,4 +48,7 @@ internal class Options
 
     [Option("no-progress", Required = false, HelpText = "Skip printing progress. (Default is false)")]
     public bool NoProgress { get; set; } = false;
+
+    [Option('v', "version", Required = false, HelpText = "Display version information.")]
+    public bool Version { get; set; } = false;
 }

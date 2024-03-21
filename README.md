@@ -12,25 +12,25 @@ dotnet tool install -g transooner
 ```bash
 transooner -d /Users/sojaner/Git/GitHub/DotnetSpider -k AIzaSyD-7kgBVqzyJb0e6k3yvh1PEw0F42xS4T8 -t google -s Debug #The API key here is a dummy API key
 ```
-- **Important note:** Using ***Google Translate*** without and API Key will switch to ***Google's free Translation API** that is provided only for ***demo purposes*** and should not be used in commercial and production environments.
+- **Important note:** Using ***Google Translate*** without an API Key will switch to ***Google's free Translation API** that is provided only for ***demo purposes*** and should not be used in commercial and production environments.
 
 ### Usage options
-| Option                        | Description                                                                                                  | Default                    |
-|-------------------------------|--------------------------------------------------------------------------------------------------------------|----------------------------|
-| -d, --directory     (optional)| Directory containing .cs files.                                                                              | Current working directory  |
-| -k, --api-key       (optional)| Translate API Key.                                                                                           |                            |
-| -t, --translator    (optional)| Translator to use (google, deepl).                                                                           | google                     |
-| -l, --language      (optional)| Language to translate to.                                                                                    | en-US                      |
-| -r, --regex         (optional)| Regex pattern to match comments to be translated.                                                            | [^\x00-\x7F]               |
-| -i, --includes      (optional)| Glob pattern to include files.                                                                               | **/*.cs                    |
-| -e, --excludes      (optional)| Glob pattern to exclude files.                                                                               | bin/*.* obj/*.*            |
-| -c, --capitalize    (optional)| Capitalize first letter of translated comments.                                                              | true                       |
-| -y, --yes           (optional)| Acknowledge and disable the "Google's free Translation API" usage warning by implicitly answering "yes".     | false                      |
-| -s, --symbols       (optional)| Preprocessor symbols to use with the C# parser for translating conditional code parts.                       | no symbols                 |
-| -n, --no-logo       (optional)| Skip printing the logo.                                                                                      | false                      |
-| --no-comments       (optional)| Skip translating comments.                                                                                   | false                      |
-| --no-strings        (optional)| Skip translating strings.                                                                                    | false                      |
-| --no-documentation  (optional)| Skip translating documentation comments.                                                                     | false                      |
-| --no-progress       (optional)| Skip printing progress.                                                                                      | false                      |
-| --help              (optional)| Display this help screen.                                                                                    |                            |
-| --version           (optional)| Display version information.                                                                                 |                            |
+| Option              | Description                                                                                                  | Default                    | Optional |
+|---------------------|--------------------------------------------------------------------------------------------------------------|----------------------------|----------|
+| -d, --directory     | Directory containing .cs files.                                                                              | Current working directory  | true     |
+| -k, --api-key       | Translate API Key.                                                                                           |                            | true     |
+| -t, --translator    | Translator to use (google, deepl).                                                                           | google                     | true     |
+| -l, --language      | Language to translate to.                                                                                    | en-US                      | true     |
+| -r, --regex         | Regex pattern to match comments to be translated.                                                            | [^\x00-\x7F]               | true     |
+| -i, --includes      | Glob pattern to include files.                                                                               | **/*.cs                    | true     |
+| -e, --excludes      | Glob pattern to exclude files.                                                                               | bin/*.* obj/*.*            | true     |
+| -c, --capitalize    | Capitalize first letter of translated comments.                                                              | true                       | true     |
+| -y, --yes           | Acknowledge and disable the "Google's free Translation API" usage warning by implicitly answering "yes".     | false                      | true     |
+| -s, --symbols       | Preprocessor symbols to use with the C# parser for translating conditional code parts.                       | no symbols                 | true     |
+| -n, --no-logo       | Skip printing the logo.                                                                                      | false                      | true     |
+| --no-comments       | Skip translating comments.                                                                                   | false                      | true     |
+| --no-strings        | Skip translating strings.                                                                                    | false                      | true     |
+| --no-documentation  | Skip translating documentation comments.                                                                     | false                      | true     |
+| --no-progress       | Skip printing progress.                                                                                      | false                      | true     |
+| --help              | Display this help screen.                                                                                    |                            |          |
+| --version           | Display version information.                                                                                 |                            |          |

@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Reflection;
 using CommandLine;
 using System.Text.RegularExpressions;
@@ -10,9 +10,16 @@ using Utilities = TranSooner.Utilities;
 
 ConsoleColor consoleColor = Console.ForegroundColor;
 
-await Parser.Default.ParseArguments<Options>(args).WithParsedAsync(options =>
+await new Parser(settings => settings.AutoVersion = false).ParseArguments<Options>(args).WithParsedAsync(options =>
 {
-    string version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "1.0.0.0";
+    string version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "1.0.0";
+
+    if (options.Version)
+    {
+        Console.WriteLine(version);
+
+        return Task.CompletedTask;
+    }
 
     bool noColor = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("NO_COLOR"));
 
@@ -50,7 +57,7 @@ await Parser.Default.ParseArguments<Options>(args).WithParsedAsync(options =>
     {
         Console.ForegroundColor = noColor ? consoleColor : ConsoleColor.DarkYellow;
 
-        Console.WriteLine("NOTE: Using Google Translate without and API Key will switch to Google's free Translation API that is provided only for demo purposes and should not be used in commercial and production environments.");
+        Console.WriteLine("NOTE: Using Google Translate without an API Key will switch to Google's free Translation API that is provided only for demo purposes and should not be used in commercial and production environments.");
 
         Console.ForegroundColor = consoleColor;
 
