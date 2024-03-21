@@ -33,4 +33,4 @@ transooner -d /Users/sojaner/Git/GitHub/DotnetSpider -k AIzaSyD-7kgBVqzyJb0e6k3y
 | --no-documentation  | Skip translating documentation.                                                                              | false                      | true     |
 | --no-progress       | Skip printing progress.                                                                                      | false                      | true     |
 | --help              | Display this help screen.                                                                                    |                            |          |
-| --version           | Display version information.                                                                                 |                            |          |
+| -v, --version       | Display version information.                                                                                 |                            |          |
