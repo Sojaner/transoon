@@ -98,7 +98,9 @@ internal partial class Analyzer(Regex translatable, ITranslator translator, Opti
 
                 progressBar?.Tick();
 
-                progressBar?.WriteErrorLine($"{filePath}: {e.Message}");
+                Action<string> writeErrorLine = progressBar != null ? progressBar.WriteErrorLine : Console.Error.WriteLine;
+
+                writeErrorLine($"{filePath}: {e.Message}");
 
                 failed++;
             }
