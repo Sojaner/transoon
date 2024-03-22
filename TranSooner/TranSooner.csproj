@@ -15,7 +15,6 @@
     <RepositoryType>Github</RepositoryType>
     <PackageTags>language documentation translator translation csharp command-line dotnet source translate dotnet-core languages command-line-tool source-code dotnet-global-tool</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
@@ -33,7 +32,6 @@
 
   <ItemGroup>
     <None Include="..\README.md" Pack="true" PackagePath="\"/>
-    <None Include="..\LICENSE" Pack="true" PackagePath=""/>
   </ItemGroup>
 
 </Project>
