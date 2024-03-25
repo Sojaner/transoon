@@ -1,6 +1,6 @@
 ## ***Tran-sooner*** (**sooner** rather than ~~later~~), for C# source code documentation, comments, and strings
 **TranSooner** is a **.NET Global Tool** for translating all the ***documentation***, ***comments***, and ***strings*** in a **C#** codebase.
-- This tool was originally created for translating the codebase of **DotnetSpider** library from [Chinese](https://github.com/dotnetcore/DotnetSpider) to [English](https://github.com/Sojaner/DotnetSpider/tree/en-updated).
+- This tool was originally created for translating the codebase of **DotnetSpider** library from [Chinese](https://github.com/dotnetcore/DotnetSpider) to [English](https://github.com/Sojaner/DotnetSpider).
 
 ### Installation
 ```bash
